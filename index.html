@@ -1,0 +1,1766 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <title>AAASSU Lead Command Center | G$D</title>
+    <link rel="manifest" href="data:application/json,{'name':'Lead Command Center','short_name':'LeadHQ','display':'standalone','theme_color':'%23e94560'}">
+    <style>
+        :root {
+            --bg-dark: #0a0a0f;
+            --bg-panel: #12121a;
+            --bg-card: #1a1a26;
+            --bg-input: #1e1e2d;
+            --accent-red: #e94560;
+            --accent-cyan: #00fff5;
+            --accent-yellow: #ffc857;
+            --accent-green: #00ff88;
+            --accent-purple: #a855f7;
+            --accent-orange: #ff8c42;
+            --text-primary: #ffffff;
+            --text-secondary: #8888a0;
+            --text-muted: #555566;
+            --border-color: #2a2a3e;
+            --grid-line: rgba(233, 69, 96, 0.1);
+            --shadow-glow: 0 0 40px rgba(233, 69, 96, 0.3);
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        @font-face {
+            font-family: 'SystemUI';
+            src: local('SF Pro Display'), local('Segoe UI'), local('system-ui');
+        }
+        body {
+            font-family: 'SystemUI', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg-dark);
+            color: var(--text-primary);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-image: 
+                linear-gradient(var(--grid-line) 1px, transparent 1px),
+                linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+            background-size: 50px 50px;
+            pointer-events: none;
+            z-index: 0;
+            animation: gridPulse 8s ease-in-out infinite;
+        }
+        @keyframes gridPulse { 0%, 100% { opacity: 0.3; } 50% { opacity: 0.6; } }
+        @keyframes livePulse { 0%, 100% { box-shadow: 0 0 0 0 rgba(0, 255, 136, 0.7); } 50% { box-shadow: 0 0 0 8px rgba(0, 255, 136, 0); } }
+        @keyframes newLeadPulse { 0% { background: rgba(233, 69, 96, 0.3); } 100% { background: transparent; } }
+        @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes boldPulse { 0%, 100% { font-weight: 800; text-shadow: 0 0 10px var(--accent-red); } 50% { font-weight: 600; text-shadow: none; } }
+        
+        /* LOGIN SCREEN */
+        .login-screen {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: linear-gradient(135deg, var(--bg-dark) 0%, #1a0a15 50%, var(--bg-dark) 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+            transition: opacity 0.5s, visibility 0.5s;
+        }
+        .login-screen.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
+        .login-container {
+            background: var(--bg-panel);
+            border: 2px solid var(--accent-red);
+            padding: 60px 50px;
+            width: 440px;
+            position: relative;
+            animation: fadeIn 0.6s ease-out;
+        }
+        .login-container::before {
+            content: '';
+            position: absolute;
+            top: -2px; left: -2px; right: -2px; bottom: -2px;
+            background: linear-gradient(45deg, var(--accent-red), var(--accent-cyan), var(--accent-red));
+            z-index: -1;
+            filter: blur(20px);
+            opacity: 0.3;
+        }
+        .login-logo {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        .login-logo h1 {
+            font-size: 2.2rem;
+            font-weight: 800;
+            letter-spacing: 4px;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+        .login-logo h1 span { color: var(--accent-red); }
+        .login-logo p {
+            font-size: 0.65rem;
+            color: var(--accent-cyan);
+            letter-spacing: 3px;
+            text-transform: uppercase;
+        }
+        .login-form { display: flex; flex-direction: column; gap: 20px; }
+        .form-group { display: flex; flex-direction: column; gap: 8px; }
+        .form-group label {
+            font-size: 0.7rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+        .form-group input, .form-group select {
+            background: var(--bg-input);
+            border: 1px solid var(--border-color);
+            padding: 14px 18px;
+            color: var(--text-primary);
+            font-size: 1rem;
+            transition: all 0.3s;
+        }
+        .form-group input:focus, .form-group select:focus {
+            outline: none;
+            border-color: var(--accent-red);
+            box-shadow: 0 0 20px rgba(233, 69, 96, 0.2);
+        }
+        .login-btn {
+            background: var(--accent-red);
+            border: none;
+            padding: 16px;
+            color: white;
+            font-size: 0.85rem;
+            font-weight: 700;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 10px;
+        }
+        .login-btn:hover { background: #ff5a75; box-shadow: var(--shadow-glow); transform: translateY(-2px); }
+        .role-badges { display: flex; gap: 10px; justify-content: center; margin-top: 30px; }
+        .role-badge {
+            font-size: 0.6rem;
+            padding: 6px 12px;
+            border: 1px solid var(--border-color);
+            color: var(--text-secondary);
+            letter-spacing: 1px;
+        }
+        .role-badge.exec { border-color: var(--accent-purple); color: var(--accent-purple); }
+        .role-badge.mgr { border-color: var(--accent-cyan); color: var(--accent-cyan); }
+        .role-badge.rep { border-color: var(--accent-green); color: var(--accent-green); }
+
+        /* MAIN APP */
+        .app-container { display: none; position: relative; z-index: 1; }
+        .app-container.active { display: block; }
+        
+        /* TOP BAR */
+        .top-bar {
+            background: var(--bg-panel);
+            border-bottom: 2px solid var(--accent-red);
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+        .top-bar-left { display: flex; align-items: center; gap: 30px; }
+        .brand h1 {
+            font-size: 1.5rem;
+            font-weight: 800;
+            letter-spacing: 3px;
+        }
+        .brand h1 span { color: var(--accent-red); }
+        .brand p {
+            font-size: 0.55rem;
+            color: var(--accent-cyan);
+            letter-spacing: 2px;
+        }
+        .live-indicator {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            background: rgba(0, 255, 136, 0.1);
+            border: 1px solid var(--accent-green);
+        }
+        .live-dot {
+            width: 8px;
+            height: 8px;
+            background: var(--accent-green);
+            border-radius: 50%;
+            animation: livePulse 1.5s ease-in-out infinite;
+        }
+        .live-indicator span {
+            font-size: 0.65rem;
+            color: var(--accent-green);
+            letter-spacing: 2px;
+        }
+        .top-bar-right { display: flex; align-items: center; gap: 20px; }
+        .user-info { text-align: right; }
+        .user-info .name { font-weight: 600; font-size: 0.9rem; }
+        .user-info .role {
+            font-size: 0.65rem;
+            color: var(--accent-cyan);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .header-btn {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            padding: 10px 16px;
+            font-size: 0.75rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .header-btn:hover { border-color: var(--accent-red); background: var(--bg-panel); }
+        .header-btn.alert { position: relative; }
+        .header-btn.alert .badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: var(--accent-red);
+            color: white;
+            font-size: 0.6rem;
+            padding: 2px 6px;
+            border-radius: 10px;
+            font-weight: 700;
+        }
+        .logout-btn { background: transparent; border: 1px solid var(--accent-red); color: var(--accent-red); }
+        .logout-btn:hover { background: var(--accent-red); color: white; }
+
+        /* MAIN CONTENT */
+        .main-content { padding: 20px 30px; max-width: 1900px; margin: 0 auto; }
+        
+        /* QUICK STATS BAR */
+        .quick-stats {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+        .stat-card {
+            background: linear-gradient(135deg, var(--bg-panel) 0%, var(--bg-card) 100%);
+            border: 1px solid var(--border-color);
+            padding: 20px;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0;
+            width: 4px;
+            height: 100%;
+        }
+        .stat-card.ca::before { background: var(--accent-red); }
+        .stat-card.az::before { background: var(--accent-orange); }
+        .stat-card.nv::before { background: var(--accent-yellow); }
+        .stat-card.ut::before { background: var(--accent-green); }
+        .stat-card.wy::before { background: var(--accent-cyan); }
+        .stat-card.mt::before { background: var(--accent-purple); }
+        .stat-card.total::before { background: linear-gradient(180deg, var(--accent-red), var(--accent-cyan)); }
+        .stat-card:hover { transform: translateY(-3px); border-color: var(--accent-red); }
+        .stat-card .label {
+            font-size: 0.65rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 8px;
+        }
+        .stat-card .value {
+            font-size: 2rem;
+            font-weight: 800;
+        }
+        .stat-card .pipeline {
+            font-size: 0.7rem;
+            color: var(--accent-green);
+            margin-top: 5px;
+        }
+        .stat-card.new-lead { animation: newLeadPulse 2s ease-out; }
+        .bold-update { animation: boldPulse 1.5s ease-in-out 3; }
+
+        /* NAV TABS */
+        .nav-tabs {
+            display: flex;
+            gap: 4px;
+            margin-bottom: 20px;
+            overflow-x: auto;
+            padding-bottom: 5px;
+        }
+        .nav-tab {
+            font-size: 0.7rem;
+            padding: 12px 20px;
+            background: var(--bg-panel);
+            border: 1px solid var(--border-color);
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            white-space: nowrap;
+        }
+        .nav-tab:hover { background: var(--bg-card); border-color: var(--accent-red); color: var(--text-primary); }
+        .nav-tab.active { background: var(--accent-red); border-color: var(--accent-red); color: var(--text-primary); }
+
+        /* PANELS */
+        .panel {
+            background: var(--bg-panel);
+            border: 1px solid var(--border-color);
+            margin-bottom: 20px;
+        }
+        .panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 20px;
+            border-bottom: 1px solid var(--border-color);
+            background: rgba(233, 69, 96, 0.05);
+        }
+        .panel-title {
+            font-size: 0.85rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: var(--accent-red);
+        }
+        .panel-actions { display: flex; gap: 10px; }
+        .panel-btn {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            color: var(--text-secondary);
+            padding: 8px 14px;
+            font-size: 0.7rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .panel-btn:hover { border-color: var(--accent-cyan); color: var(--accent-cyan); }
+        .panel-btn.primary { background: var(--accent-red); border-color: var(--accent-red); color: white; }
+        .panel-btn.primary:hover { background: #ff5a75; }
+
+        /* DATA TABLE */
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .data-table th {
+            background: var(--bg-card);
+            padding: 12px 15px;
+            text-align: left;
+            font-size: 0.65rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-secondary);
+            border-bottom: 1px solid var(--border-color);
+            position: sticky;
+            top: 70px;
+        }
+        .data-table td {
+            padding: 12px 15px;
+            border-bottom: 1px solid var(--border-color);
+            font-size: 0.85rem;
+            vertical-align: middle;
+        }
+        .data-table tr:hover { background: rgba(233, 69, 96, 0.05); }
+        .data-table tr.new-row { animation: newLeadPulse 3s ease-out; }
+        .data-table .project-name { font-weight: 700; color: var(--text-primary); }
+        .data-table .project-name.bold-new { font-weight: 900; animation: boldPulse 2s ease-in-out infinite; color: var(--accent-red); }
+
+        /* BADGES */
+        .state-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            font-size: 0.65rem;
+            font-weight: 700;
+            letter-spacing: 1px;
+        }
+        .state-badge.CA { background: rgba(233, 69, 96, 0.2); color: var(--accent-red); border: 1px solid var(--accent-red); }
+        .state-badge.AZ { background: rgba(255, 140, 66, 0.2); color: var(--accent-orange); border: 1px solid var(--accent-orange); }
+        .state-badge.NV { background: rgba(255, 200, 87, 0.2); color: var(--accent-yellow); border: 1px solid var(--accent-yellow); }
+        .state-badge.UT { background: rgba(0, 255, 136, 0.2); color: var(--accent-green); border: 1px solid var(--accent-green); }
+        .state-badge.WY { background: rgba(0, 255, 245, 0.2); color: var(--accent-cyan); border: 1px solid var(--accent-cyan); }
+        .state-badge.MT { background: rgba(168, 85, 247, 0.2); color: var(--accent-purple); border: 1px solid var(--accent-purple); }
+
+        .status-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            font-size: 0.6rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .status-badge.active { background: rgba(0, 255, 136, 0.2); color: var(--accent-green); }
+        .status-badge.contacted { background: rgba(0, 255, 245, 0.2); color: var(--accent-cyan); }
+        .status-badge.proposal { background: rgba(255, 200, 87, 0.2); color: var(--accent-yellow); }
+        .status-badge.won { background: rgba(0, 255, 136, 0.3); color: var(--accent-green); border: 1px solid var(--accent-green); }
+        .status-badge.lost { background: rgba(233, 69, 96, 0.2); color: var(--accent-red); }
+        .status-badge.new { background: var(--accent-red); color: white; animation: livePulse 2s ease-in-out infinite; }
+
+        .value-cell {
+            font-weight: 700;
+            color: var(--accent-green);
+            font-family: 'Courier New', monospace;
+        }
+
+        /* EXTERNAL LINKS */
+        .ext-link {
+            color: var(--accent-cyan);
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            transition: all 0.3s;
+        }
+        .ext-link:hover { color: var(--accent-red); text-decoration: underline; }
+        .ext-link::after { content: '↗'; font-size: 0.7rem; }
+        .link-options {
+            display: inline-flex;
+            gap: 5px;
+            margin-left: 10px;
+        }
+        .link-opt {
+            font-size: 0.6rem;
+            padding: 2px 6px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .link-opt:hover { border-color: var(--accent-cyan); color: var(--accent-cyan); }
+
+        /* ACTION BUTTONS */
+        .action-btns { display: flex; gap: 8px; }
+        .action-btn {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            color: var(--text-secondary);
+            padding: 6px 10px;
+            font-size: 0.7rem;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .action-btn:hover { border-color: var(--accent-cyan); color: var(--accent-cyan); }
+        .action-btn.email:hover { border-color: var(--accent-green); color: var(--accent-green); }
+        .action-btn.text:hover { border-color: var(--accent-yellow); color: var(--accent-yellow); }
+
+        /* SIDEBAR PANELS */
+        .sidebar-panel {
+            position: fixed;
+            top: 0; right: -500px;
+            width: 480px;
+            height: 100vh;
+            background: var(--bg-panel);
+            border-left: 2px solid var(--accent-red);
+            z-index: 2000;
+            transition: right 0.4s ease;
+            overflow-y: auto;
+        }
+        .sidebar-panel.active { right: 0; }
+        .sidebar-header {
+            padding: 25px;
+            background: var(--bg-card);
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .sidebar-header h3 {
+            font-size: 1rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: var(--accent-red);
+        }
+        .close-btn {
+            background: none;
+            border: 1px solid var(--border-color);
+            color: var(--text-secondary);
+            padding: 8px 12px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .close-btn:hover { border-color: var(--accent-red); color: var(--accent-red); }
+        .sidebar-content { padding: 25px; }
+
+        /* SUBSCRIPTION PANEL */
+        .subscription-form { display: flex; flex-direction: column; gap: 20px; }
+        .sub-option {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            padding: 15px;
+            transition: all 0.3s;
+        }
+        .sub-option:hover { border-color: var(--accent-cyan); }
+        .sub-option label {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            cursor: pointer;
+        }
+        .sub-option input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            accent-color: var(--accent-red);
+        }
+        .sub-option .sub-title { font-weight: 600; font-size: 0.9rem; }
+        .sub-option .sub-desc { font-size: 0.75rem; color: var(--text-secondary); margin-top: 5px; }
+        .email-input {
+            background: var(--bg-input);
+            border: 1px solid var(--border-color);
+            padding: 14px;
+            color: var(--text-primary);
+            width: 100%;
+            font-size: 0.9rem;
+        }
+        .email-input:focus { outline: none; border-color: var(--accent-red); }
+        .frequency-select {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .freq-btn {
+            flex: 1;
+            min-width: 100px;
+            padding: 12px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: center;
+            font-size: 0.75rem;
+        }
+        .freq-btn:hover, .freq-btn.active { border-color: var(--accent-red); color: var(--accent-red); }
+
+        /* ACTIVITY LOG */
+        .activity-log { display: flex; flex-direction: column; gap: 15px; }
+        .activity-item {
+            background: var(--bg-card);
+            border-left: 3px solid var(--accent-cyan);
+            padding: 15px;
+        }
+        .activity-item.view { border-left-color: var(--accent-green); }
+        .activity-item.edit { border-left-color: var(--accent-yellow); }
+        .activity-item.contact { border-left-color: var(--accent-purple); }
+        .activity-item .time {
+            font-size: 0.65rem;
+            color: var(--text-muted);
+            margin-bottom: 5px;
+        }
+        .activity-item .user { font-weight: 600; color: var(--accent-cyan); }
+        .activity-item .action { font-size: 0.85rem; color: var(--text-secondary); }
+
+        /* MESSAGE COMPOSER */
+        .message-composer { display: flex; flex-direction: column; gap: 15px; }
+        .template-tabs { display: flex; gap: 5px; margin-bottom: 10px; }
+        .template-tab {
+            padding: 10px 20px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            color: var(--text-secondary);
+            cursor: pointer;
+            font-size: 0.75rem;
+            transition: all 0.3s;
+        }
+        .template-tab.active { background: var(--accent-red); border-color: var(--accent-red); color: white; }
+        .compose-area {
+            background: var(--bg-input);
+            border: 1px solid var(--border-color);
+            padding: 15px;
+            color: var(--text-primary);
+            min-height: 200px;
+            font-size: 0.9rem;
+            line-height: 1.6;
+            resize: vertical;
+        }
+        .compose-area:focus { outline: none; border-color: var(--accent-red); }
+        .variable-tags { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+        .var-tag {
+            padding: 5px 10px;
+            background: var(--bg-card);
+            border: 1px solid var(--accent-cyan);
+            color: var(--accent-cyan);
+            font-size: 0.7rem;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .var-tag:hover { background: var(--accent-cyan); color: var(--bg-dark); }
+        .send-btns { display: flex; gap: 10px; margin-top: 15px; }
+        .send-btn {
+            flex: 1;
+            padding: 14px;
+            border: none;
+            font-weight: 700;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .send-btn.email-send { background: var(--accent-green); color: var(--bg-dark); }
+        .send-btn.text-send { background: var(--accent-yellow); color: var(--bg-dark); }
+        .send-btn.copy-send { background: var(--accent-cyan); color: var(--bg-dark); }
+        .send-btn:hover { transform: translateY(-2px); box-shadow: 0 5px 20px rgba(0,0,0,0.3); }
+
+        /* NOTIFICATION TOAST */
+        .toast-container {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            z-index: 3000;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .toast {
+            background: var(--bg-panel);
+            border: 1px solid var(--accent-green);
+            padding: 15px 25px;
+            animation: slideIn 0.4s ease-out;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            min-width: 300px;
+        }
+        .toast.error { border-color: var(--accent-red); }
+        .toast.warning { border-color: var(--accent-yellow); }
+        .toast .icon { font-size: 1.2rem; }
+        .toast .message { font-size: 0.85rem; }
+
+        /* OVERLAY */
+        .overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 1500;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s;
+        }
+        .overlay.active { opacity: 1; visibility: visible; }
+
+        /* FILTERS */
+        .filter-bar {
+            display: flex;
+            gap: 15px;
+            padding: 15px 20px;
+            background: var(--bg-card);
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        .filter-group { display: flex; align-items: center; gap: 8px; }
+        .filter-group label {
+            font-size: 0.7rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+        }
+        .filter-group select {
+            background: var(--bg-input);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            padding: 8px 12px;
+            font-size: 0.8rem;
+        }
+        .filter-group select:focus { outline: none; border-color: var(--accent-red); }
+        .search-box {
+            flex: 1;
+            min-width: 200px;
+            position: relative;
+        }
+        .search-box input {
+            width: 100%;
+            background: var(--bg-input);
+            border: 1px solid var(--border-color);
+            padding: 10px 15px 10px 35px;
+            color: var(--text-primary);
+            font-size: 0.85rem;
+        }
+        .search-box::before {
+            content: '🔍';
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 0.8rem;
+        }
+
+        /* FOOTER */
+        footer {
+            text-align: center;
+            padding: 20px;
+            color: var(--text-muted);
+            font-size: 0.7rem;
+            letter-spacing: 2px;
+            border-top: 1px solid var(--border-color);
+            margin-top: 30px;
+        }
+
+        /* RESPONSIVE */
+        @media (max-width: 1200px) {
+            .quick-stats { grid-template-columns: repeat(4, 1fr); }
+        }
+        @media (max-width: 768px) {
+            .quick-stats { grid-template-columns: repeat(2, 1fr); }
+            .top-bar { flex-direction: column; gap: 15px; }
+            .sidebar-panel { width: 100%; right: -100%; }
+            .filter-bar { flex-direction: column; }
+            .data-table { font-size: 0.75rem; }
+        }
+    </style>
+</head>
+<body>
+    <!-- LOGIN SCREEN -->
+    <div class="login-screen" id="loginScreen">
+        <div class="login-container">
+            <div class="login-logo">
+                <h1>LEAD <span>COMMAND</span></h1>
+                <p>AAA Smart Security University</p>
+            </div>
+            <form class="login-form" onsubmit="handleLogin(event)">
+                <div class="form-group">
+                    <label>Email Address</label>
+                    <input type="email" id="loginEmail" required placeholder="your.name@aaasecurity.com">
+                </div>
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" id="loginPassword" required placeholder="••••••••">
+                </div>
+                <div class="form-group">
+                    <label>Role</label>
+                    <select id="loginRole" required>
+                        <option value="">Select Your Role</option>
+                        <option value="executive">Executive (Full Access)</option>
+                        <option value="manager">Manager (Territory Access)</option>
+                        <option value="rep">Sales Rep (Assigned Leads)</option>
+                    </select>
+                </div>
+                <button type="submit" class="login-btn">Access Command Center</button>
+            </form>
+            <div class="role-badges">
+                <span class="role-badge exec">EXEC</span>
+                <span class="role-badge mgr">MGR</span>
+                <span class="role-badge rep">REP</span>
+            </div>
+            <p style="text-align: center; margin-top: 20px; font-size: 0.65rem; color: var(--text-muted);">
+                Members First | G$D | True North
+            </p>
+        </div>
+    </div>
+
+    <!-- MAIN APP -->
+    <div class="app-container" id="appContainer">
+        <!-- TOP BAR -->
+        <div class="top-bar">
+            <div class="top-bar-left">
+                <div class="brand">
+                    <h1>LEAD <span>COMMAND</span></h1>
+                    <p>Members First • G$D • True North</p>
+                </div>
+                <div class="live-indicator">
+                    <div class="live-dot"></div>
+                    <span>LIVE DATA</span>
+                </div>
+                <div style="font-size: 0.75rem; color: var(--text-secondary);">
+                    Last Sync: <span id="lastSync">--</span>
+                </div>
+            </div>
+            <div class="top-bar-right">
+                <button class="header-btn alert" onclick="openNotifications()">
+                    🔔 Alerts
+                    <span class="badge" id="alertBadge">3</span>
+                </button>
+                <button class="header-btn" onclick="openSubscriptions()">📧 Subscribe</button>
+                <button class="header-btn" onclick="openActivity()">📊 Activity</button>
+                <div class="user-info">
+                    <div class="name" id="userName">--</div>
+                    <div class="role" id="userRole">--</div>
+                </div>
+                <button class="header-btn logout-btn" onclick="logout()">Logout</button>
+            </div>
+        </div>
+
+        <!-- MAIN CONTENT -->
+        <div class="main-content">
+            <!-- QUICK STATS -->
+            <div class="quick-stats">
+                <div class="stat-card ca" onclick="filterByState('CA')">
+                    <div class="label">California</div>
+                    <div class="value" id="caCount">2</div>
+                    <div class="pipeline">$485K pipeline</div>
+                </div>
+                <div class="stat-card az" onclick="filterByState('AZ')">
+                    <div class="label">Arizona</div>
+                    <div class="value" id="azCount">3</div>
+                    <div class="pipeline">$16.5M pipeline</div>
+                </div>
+                <div class="stat-card nv" onclick="filterByState('NV')">
+                    <div class="label">Nevada</div>
+                    <div class="value" id="nvCount">2</div>
+                    <div class="pipeline">$3.9M pipeline</div>
+                </div>
+                <div class="stat-card ut" onclick="filterByState('UT')">
+                    <div class="label">Utah</div>
+                    <div class="value" id="utCount">2</div>
+                    <div class="pipeline">$9M pipeline</div>
+                </div>
+                <div class="stat-card wy" onclick="filterByState('WY')">
+                    <div class="label">Wyoming</div>
+                    <div class="value" id="wyCount">1</div>
+                    <div class="pipeline">$145K pipeline</div>
+                </div>
+                <div class="stat-card mt" onclick="filterByState('MT')">
+                    <div class="label">Montana</div>
+                    <div class="value" id="mtCount">1</div>
+                    <div class="pipeline">$320K pipeline</div>
+                </div>
+                <div class="stat-card total" onclick="filterByState('ALL')">
+                    <div class="label">Total Pipeline</div>
+                    <div class="value" id="totalCount">11</div>
+                    <div class="pipeline">$30.3M value</div>
+                </div>
+            </div>
+
+            <!-- NAV TABS -->
+            <div class="nav-tabs">
+                <button class="nav-tab active" onclick="showSection('mls')">MLS Listings</button>
+                <button class="nav-tab" onclick="showSection('development')">Land Development</button>
+                <button class="nav-tab" onclick="showSection('rfp')">RFP Tracker</button>
+                <button class="nav-tab" onclick="showSection('hearings')">Public Hearings</button>
+                <button class="nav-tab" onclick="showSection('auctions')">Auctions/Sales</button>
+                <button class="nav-tab" onclick="showSection('jurisdictions')">Jurisdictions</button>
+                <button class="nav-tab" onclick="showSection('timeline')">Project Timeline</button>
+            </div>
+
+            <!-- MLS PANEL -->
+            <div class="panel" id="section-mls">
+                <div class="panel-header">
+                    <h2 class="panel-title">MLS Listings & New Construction</h2>
+                    <div class="panel-actions">
+                        <button class="panel-btn" onclick="openComposer()">✉️ Compose</button>
+                        <button class="panel-btn" onclick="exportToExcel()">📥 Export Excel</button>
+                        <button class="panel-btn primary" onclick="refreshData()">🔄 Refresh</button>
+                    </div>
+                </div>
+                <div class="filter-bar">
+                    <div class="filter-group">
+                        <label>State</label>
+                        <select id="filterState" onchange="applyFilters()">
+                            <option value="ALL">All States</option>
+                            <option value="CA">California</option>
+                            <option value="AZ">Arizona</option>
+                            <option value="NV">Nevada</option>
+                            <option value="UT">Utah</option>
+                            <option value="WY">Wyoming</option>
+                            <option value="MT">Montana</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label>Status</label>
+                        <select id="filterStatus" onchange="applyFilters()">
+                            <option value="ALL">All Status</option>
+                            <option value="Active">Active</option>
+                            <option value="Contacted">Contacted</option>
+                            <option value="Proposal">Proposal</option>
+                            <option value="Won">Won</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label>Value</label>
+                        <select id="filterValue" onchange="applyFilters()">
+                            <option value="ALL">All Values</option>
+                            <option value="1M+">$1M+</option>
+                            <option value="500K+">$500K+</option>
+                            <option value="100K+">$100K+</option>
+                        </select>
+                    </div>
+                    <div class="search-box">
+                        <input type="text" id="searchInput" placeholder="Search projects, developers..." onkeyup="searchLeads()">
+                    </div>
+                </div>
+                <table class="data-table" id="mlsTable">
+                    <thead>
+                        <tr>
+                            <th>MLS #</th>
+                            <th>Project</th>
+                            <th>Developer</th>
+                            <th>State</th>
+                            <th>Size</th>
+                            <th>Est. LV Value</th>
+                            <th>Status</th>
+                            <th>Source</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="mlsTableBody">
+                        <!-- Data populated by JS -->
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- OTHER SECTIONS (hidden by default) -->
+            <div class="panel" id="section-development" style="display:none;">
+                <div class="panel-header">
+                    <h2 class="panel-title">Land Development Projects</h2>
+                    <div class="panel-actions">
+                        <button class="panel-btn" onclick="exportToExcel()">📥 Export</button>
+                    </div>
+                </div>
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Project ID</th>
+                            <th>Project Name</th>
+                            <th>Developer</th>
+                            <th>State</th>
+                            <th>Acreage</th>
+                            <th>Units</th>
+                            <th>Phase</th>
+                            <th>Est. Value</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>DEV-001</td>
+                            <td class="project-name">Mountain Vista Estates</td>
+                            <td>Taylor Morrison</td>
+                            <td><span class="state-badge UT">UT</span></td>
+                            <td>85.5 acres</td>
+                            <td>350 units</td>
+                            <td>Entitlement</td>
+                            <td class="value-cell">$1.75M</td>
+                            <td><span class="status-badge active">Tracking</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="panel" id="section-rfp" style="display:none;">
+                <div class="panel-header">
+                    <h2 class="panel-title">RFP Tracker</h2>
+                    <div class="panel-actions">
+                        <button class="panel-btn" onclick="exportToExcel()">📥 Export</button>
+                    </div>
+                </div>
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>RFP ID</th>
+                            <th>Project</th>
+                            <th>Issuing Entity</th>
+                            <th>State</th>
+                            <th>Scope</th>
+                            <th>Est. Value</th>
+                            <th>Due Date</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>RFP-2025-001</td>
+                            <td class="project-name">New Police Substation</td>
+                            <td>City of Las Vegas</td>
+                            <td><span class="state-badge NV">NV</span></td>
+                            <td>Full LV Package</td>
+                            <td class="value-cell">$850K</td>
+                            <td style="color: var(--accent-yellow);">Feb 15, 2025</td>
+                            <td><span class="status-badge proposal">In Progress</span></td>
+                            <td>
+                                <a href="https://rfp.lasvegasnevada.gov/123" target="_blank" class="ext-link">View RFP</a>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="panel" id="section-hearings" style="display:none;">
+                <div class="panel-header">
+                    <h2 class="panel-title">Public Hearings Calendar</h2>
+                </div>
+                <div style="padding: 40px; text-align: center; color: var(--text-secondary);">
+                    <p>No upcoming public hearings tracked</p>
+                    <button class="panel-btn primary" style="margin-top: 15px;">+ Add Hearing</button>
+                </div>
+            </div>
+
+            <div class="panel" id="section-auctions" style="display:none;">
+                <div class="panel-header">
+                    <h2 class="panel-title">Property Auctions & Sales</h2>
+                </div>
+                <div style="padding: 40px; text-align: center; color: var(--text-secondary);">
+                    <p>No active auctions tracked</p>
+                    <button class="panel-btn primary" style="margin-top: 15px;">+ Add Auction</button>
+                </div>
+            </div>
+
+            <div class="panel" id="section-jurisdictions" style="display:none;">
+                <div class="panel-header">
+                    <h2 class="panel-title">Jurisdiction Reference</h2>
+                </div>
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>State</th>
+                            <th>County</th>
+                            <th>City</th>
+                            <th>Planning Dept</th>
+                            <th>RFP Portal</th>
+                        </tr>
+                    </thead>
+                    <tbody id="jurisdictionTable">
+                        <!-- Populated by JS -->
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="panel" id="section-timeline" style="display:none;">
+                <div class="panel-header">
+                    <h2 class="panel-title">Project Timeline & Milestones</h2>
+                </div>
+                <div style="padding: 40px; text-align: center; color: var(--text-secondary);">
+                    <p>Timeline view coming soon</p>
+                </div>
+            </div>
+
+            <footer>
+                AAASSU LEAD COMMAND CENTER v3.0 | CA • AZ • NV • UT • WY • MT | © 2025 AAA Mountain West Group
+            </footer>
+        </div>
+    </div>
+
+    <!-- OVERLAY -->
+    <div class="overlay" id="overlay" onclick="closeAllPanels()"></div>
+
+    <!-- SUBSCRIPTION PANEL -->
+    <div class="sidebar-panel" id="subscriptionPanel">
+        <div class="sidebar-header">
+            <h3>📧 Email Subscriptions</h3>
+            <button class="close-btn" onclick="closeAllPanels()">✕ Close</button>
+        </div>
+        <div class="sidebar-content">
+            <div class="subscription-form">
+                <div class="form-group">
+                    <label>Your Email</label>
+                    <input type="email" class="email-input" id="subEmail" placeholder="your.email@company.com">
+                </div>
+                
+                <h4 style="color: var(--accent-cyan); margin: 10px 0; font-size: 0.8rem; letter-spacing: 1px;">ALERT TYPES</h4>
+                
+                <div class="sub-option">
+                    <label>
+                        <input type="checkbox" id="subNewLeads" checked>
+                        <div>
+                            <div class="sub-title">New Leads Alert</div>
+                            <div class="sub-desc">Get notified when new high-value leads are added</div>
+                        </div>
+                    </label>
+                </div>
+                
+                <div class="sub-option">
+                    <label>
+                        <input type="checkbox" id="subStatusChange">
+                        <div>
+                            <div class="sub-title">Status Changes</div>
+                            <div class="sub-desc">Updates when lead status changes (contacted, proposal, etc.)</div>
+                        </div>
+                    </label>
+                </div>
+                
+                <div class="sub-option">
+                    <label>
+                        <input type="checkbox" id="subRFPDeadlines" checked>
+                        <div>
+                            <div class="sub-title">RFP Deadlines</div>
+                            <div class="sub-desc">Reminders 7 days before RFP submission deadlines</div>
+                        </div>
+                    </label>
+                </div>
+                
+                <div class="sub-option">
+                    <label>
+                        <input type="checkbox" id="subDailySummary">
+                        <div>
+                            <div class="sub-title">Daily Summary</div>
+                            <div class="sub-desc">Morning digest of all pipeline activity</div>
+                        </div>
+                    </label>
+                </div>
+                
+                <div class="sub-option">
+                    <label>
+                        <input type="checkbox" id="subWeeklyReport">
+                        <div>
+                            <div class="sub-title">Weekly Pipeline Report</div>
+                            <div class="sub-desc">Friday summary with metrics and forecasts</div>
+                        </div>
+                    </label>
+                </div>
+
+                <h4 style="color: var(--accent-cyan); margin: 20px 0 10px; font-size: 0.8rem; letter-spacing: 1px;">TERRITORY FILTER</h4>
+                
+                <div style="display: flex; flex-wrap: wrap; gap: 10px;">
+                    <label style="display: flex; align-items: center; gap: 5px; font-size: 0.85rem;">
+                        <input type="checkbox" checked> All
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 5px; font-size: 0.85rem;">
+                        <input type="checkbox"> CA
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 5px; font-size: 0.85rem;">
+                        <input type="checkbox"> AZ
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 5px; font-size: 0.85rem;">
+                        <input type="checkbox"> NV
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 5px; font-size: 0.85rem;">
+                        <input type="checkbox"> UT
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 5px; font-size: 0.85rem;">
+                        <input type="checkbox"> WY
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 5px; font-size: 0.85rem;">
+                        <input type="checkbox"> MT
+                    </label>
+                </div>
+                
+                <button class="panel-btn primary" style="width: 100%; margin-top: 20px; padding: 14px;" onclick="saveSubscriptions()">
+                    Save Subscription Settings
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ACTIVITY PANEL -->
+    <div class="sidebar-panel" id="activityPanel">
+        <div class="sidebar-header">
+            <h3>📊 User Activity Log</h3>
+            <button class="close-btn" onclick="closeAllPanels()">✕ Close</button>
+        </div>
+        <div class="sidebar-content">
+            <div class="filter-group" style="margin-bottom: 20px;">
+                <label>Filter by User</label>
+                <select style="width: 100%; padding: 10px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-primary);">
+                    <option value="ALL">All Users</option>
+                    <option value="john">John Smith</option>
+                    <option value="sarah">Sarah Jones</option>
+                    <option value="mike">Mike Wilson</option>
+                </select>
+            </div>
+            
+            <div class="activity-log" id="activityLog">
+                <div class="activity-item view">
+                    <div class="time">2 minutes ago</div>
+                    <div><span class="user">John Smith</span></div>
+                    <div class="action">Viewed lead: Teravalis Master Plan (AZ)</div>
+                </div>
+                <div class="activity-item contact">
+                    <div class="time">15 minutes ago</div>
+                    <div><span class="user">Sarah Jones</span></div>
+                    <div class="action">Sent email to: KB Homes Development</div>
+                </div>
+                <div class="activity-item edit">
+                    <div class="time">1 hour ago</div>
+                    <div><span class="user">Mike Wilson</span></div>
+                    <div class="action">Updated status: Eastmark → Contacted</div>
+                </div>
+                <div class="activity-item view">
+                    <div class="time">2 hours ago</div>
+                    <div><span class="user">John Smith</span></div>
+                    <div class="action">Exported Excel report (11 leads)</div>
+                </div>
+                <div class="activity-item contact">
+                    <div class="time">3 hours ago</div>
+                    <div><span class="user">Sarah Jones</span></div>
+                    <div class="action">Scheduled follow-up: Utah City project</div>
+                </div>
+            </div>
+            
+            <button class="panel-btn" style="width: 100%; margin-top: 20px;" onclick="exportActivityLog()">
+                📥 Export Activity Log
+            </button>
+        </div>
+    </div>
+
+    <!-- MESSAGE COMPOSER PANEL -->
+    <div class="sidebar-panel" id="composerPanel">
+        <div class="sidebar-header">
+            <h3>✉️ Message Composer</h3>
+            <button class="close-btn" onclick="closeAllPanels()">✕ Close</button>
+        </div>
+        <div class="sidebar-content">
+            <div class="message-composer">
+                <div class="form-group">
+                    <label>Recipient</label>
+                    <input type="text" class="email-input" id="recipientEmail" placeholder="contact@developer.com">
+                </div>
+                
+                <div class="template-tabs">
+                    <button class="template-tab active" onclick="loadTemplate('intro')">Introduction</button>
+                    <button class="template-tab" onclick="loadTemplate('followup')">Follow-Up</button>
+                    <button class="template-tab" onclick="loadTemplate('proposal')">Proposal</button>
+                    <button class="template-tab" onclick="loadTemplate('text')">SMS</button>
+                </div>
+                
+                <div class="form-group">
+                    <label>Subject</label>
+                    <input type="text" class="email-input" id="emailSubject" value="AAA Smart Security - Low Voltage Partnership">
+                </div>
+                
+                <textarea class="compose-area" id="messageBody">Hello [CONTACT_NAME],
+
+I'm reaching out from AAA Smart Security regarding [PROJECT_NAME]. As a leading provider of low voltage systems across the Southwest, we specialize in:
+
+• Fire Alarm & Life Safety Systems
+• Access Control & Security
+• Structured Cabling & Network Infrastructure
+• CCTV & Surveillance Solutions
+
+With your upcoming [UNIT_COUNT] unit development, we'd love to discuss how we can support your project from the ground up.
+
+Would you have 15 minutes this week for a quick call?
+
+Best regards,
+[REP_NAME]
+AAA Smart Security University
+[REP_PHONE]</textarea>
+                
+                <div>
+                    <label style="font-size: 0.7rem; color: var(--text-secondary);">INSERT VARIABLE:</label>
+                    <div class="variable-tags">
+                        <span class="var-tag" onclick="insertVariable('[CONTACT_NAME]')">[CONTACT_NAME]</span>
+                        <span class="var-tag" onclick="insertVariable('[PROJECT_NAME]')">[PROJECT_NAME]</span>
+                        <span class="var-tag" onclick="insertVariable('[UNIT_COUNT]')">[UNIT_COUNT]</span>
+                        <span class="var-tag" onclick="insertVariable('[STATE]')">[STATE]</span>
+                        <span class="var-tag" onclick="insertVariable('[VALUE]')">[VALUE]</span>
+                        <span class="var-tag" onclick="insertVariable('[REP_NAME]')">[REP_NAME]</span>
+                        <span class="var-tag" onclick="insertVariable('[REP_PHONE]')">[REP_PHONE]</span>
+                    </div>
+                </div>
+                
+                <div class="send-btns">
+                    <button class="send-btn email-send" onclick="sendEmail()">📧 Send Email</button>
+                    <button class="send-btn text-send" onclick="sendText()">💬 Send SMS</button>
+                    <button class="send-btn copy-send" onclick="copyMessage()">📋 Copy</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- NOTIFICATIONS PANEL -->
+    <div class="sidebar-panel" id="notificationPanel">
+        <div class="sidebar-header">
+            <h3>🔔 Alerts & Notifications</h3>
+            <button class="close-btn" onclick="closeAllPanels()">✕ Close</button>
+        </div>
+        <div class="sidebar-content">
+            <div class="activity-log">
+                <div class="activity-item" style="border-left-color: var(--accent-red);">
+                    <div class="time">Just now</div>
+                    <div style="font-weight: 700; color: var(--accent-red);">🔥 NEW HIGH-VALUE LEAD</div>
+                    <div class="action">Teravalis Master Plan - $15M+ potential</div>
+                </div>
+                <div class="activity-item" style="border-left-color: var(--accent-yellow);">
+                    <div class="time">2 hours ago</div>
+                    <div style="font-weight: 700; color: var(--accent-yellow);">⚠️ RFP DEADLINE APPROACHING</div>
+                    <div class="action">Las Vegas Police Substation - Due Feb 15</div>
+                </div>
+                <div class="activity-item" style="border-left-color: var(--accent-green);">
+                    <div class="time">Yesterday</div>
+                    <div style="font-weight: 700; color: var(--accent-green);">✅ STATUS UPDATE</div>
+                    <div class="action">Eastmark expansion moved to "Contacted"</div>
+                </div>
+            </div>
+            <button class="panel-btn" style="width: 100%; margin-top: 20px;">Mark All as Read</button>
+        </div>
+    </div>
+
+    <!-- TOAST CONTAINER -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <script>
+        // ==================== DATA ====================
+        const mlsLeads = [
+            { id: 'MLS-AZ-001', project: 'Teravalis Master Plan', developer: 'Howard Hughes Corp', state: 'AZ', city: 'Buckeye', size: '37,000 acres', units: '300K residents', value: 15000000, status: 'Active', contacted: false, url: 'https://www.howardhughes.com', isNew: true },
+            { id: 'MLS-UT-001', project: 'Utah City - 700 Acres', developer: 'Flagship Companies', state: 'UT', city: 'Vineyard', size: '700 acres', units: '5,000+ units', value: 8500000, status: 'Active', contacted: false, url: 'https://www.planetizen.com', isNew: true },
+            { id: 'MLS-NV-001', project: 'Mosaic West Henderson', developer: 'Mosaic Companies', state: 'NV', city: 'Henderson', size: '220 acres', units: '1,640 units', value: 3500000, status: 'Active', contacted: false, url: 'https://www.reviewjournal.com', isNew: false },
+            { id: 'MLS-AZ-002', project: 'Eastmark by Woodside', developer: 'Woodside Homes', state: 'AZ', city: 'Mesa', size: '3,200 acres', units: '15K+ homes', value: 850000, status: 'Contacted', contacted: true, url: 'https://www.eastmark.com', isNew: false },
+            { id: 'MLS-AZ-003', project: 'Blossom Rock', developer: 'Multiple Builders', state: 'AZ', city: 'Mesa', size: '464 acres', units: 'TBD', value: 620000, status: 'Active', contacted: false, url: 'https://www.blossomrock.com', isNew: false },
+            { id: 'MLS-UT-002', project: 'Holbrook Farms', developer: 'Ivory Innovations', state: 'UT', city: 'Lehi', size: '240 acres', units: '240 units', value: 520000, status: 'Active', contacted: false, url: 'https://www.ksl.com', isNew: false },
+            { id: 'MLS-CA-001', project: 'KB Homes Riverside', developer: 'KB Homes', state: 'CA', city: 'Riverside', size: '200 acres', units: '200 units', value: 450000, status: 'Active', contacted: false, url: 'https://www.newhomesource.com', isNew: false },
+            { id: 'MLS-NV-002', project: 'Piazza Paradiso', developer: 'Lennar Homes', state: 'NV', city: 'Henderson', size: '168 acres', units: 'Luxury', value: 420000, status: 'Active', contacted: false, url: 'https://neighborhoodsinlasvegas.com', isNew: false },
+            { id: 'MLS-MT-001', project: 'Gran Cielo', developer: 'Cadius Partners', state: 'MT', city: 'Bozeman', size: '49 acres', units: 'Mixed', value: 320000, status: 'Active', contacted: false, url: 'https://www.greaterbozeman.com', isNew: false },
+            { id: 'MLS-WY-001', project: 'Teal Spring', developer: 'Chase Brothers', state: 'WY', city: 'Sheridan', size: '57 lots', units: '57+6 comm', value: 145000, status: 'Active', contacted: false, url: 'https://chasebrothersllc.com', isNew: false },
+            { id: 'MLS-CA-002', project: 'Sample New Dev', developer: 'Test Builder', state: 'CA', city: 'San Diego', size: '100 acres', units: '500 units', value: 35000, status: 'Active', contacted: false, url: '', isNew: false }
+        ];
+
+        const jurisdictions = [
+            { state: 'CA', county: 'Los Angeles County', city: 'Los Angeles', planning: 'https://planning.lacounty.gov', rfp: 'https://camisvr.co.la.ca.us/lacobids' },
+            { state: 'CA', county: 'Orange County', city: 'Anaheim', planning: 'https://www.ocplanning.net', rfp: 'https://bids.ocgov.com' },
+            { state: 'CA', county: 'Riverside County', city: 'Riverside', planning: 'https://planning.rctlma.org', rfp: 'https://purchasing.rivco.org' },
+            { state: 'CA', county: 'San Diego County', city: 'San Diego', planning: 'https://www.sandiegocounty.gov/pds', rfp: 'https://www.sandiegocounty.gov/purchasing' },
+            { state: 'AZ', county: 'Maricopa County', city: 'Phoenix', planning: 'https://www.maricopa.gov/619/Planning-Development', rfp: 'https://www.maricopa.gov/604/Procurement' },
+            { state: 'AZ', county: 'Pima County', city: 'Tucson', planning: 'https://webcms.pima.gov/government/development_services', rfp: 'https://www.tucsonaz.gov/procurement' },
+            { state: 'NV', county: 'Clark County', city: 'Las Vegas', planning: 'https://www.clarkcountynv.gov/government/departments/comprehensive_planning', rfp: 'https://www.clarkcountynv.gov/government/purchasing' },
+            { state: 'NV', county: 'Washoe County', city: 'Reno', planning: 'https://www.washoecounty.gov/csd/planning_and_development', rfp: 'https://www.washoecounty.gov/finance/purchasing' }
+        ];
+
+        const emailTemplates = {
+            intro: {
+                subject: 'AAA Smart Security - Low Voltage Partnership Opportunity',
+                body: `Hello [CONTACT_NAME],
+
+I'm reaching out from AAA Smart Security regarding [PROJECT_NAME]. As a leading provider of low voltage systems across the Southwest, we specialize in:
+
+• Fire Alarm & Life Safety Systems
+• Access Control & Security
+• Structured Cabling & Network Infrastructure
+• CCTV & Surveillance Solutions
+
+With your upcoming [UNIT_COUNT] unit development, we'd love to discuss how we can support your project from the ground up.
+
+Would you have 15 minutes this week for a quick call?
+
+Best regards,
+[REP_NAME]
+AAA Smart Security University
+[REP_PHONE]`
+            },
+            followup: {
+                subject: 'Following Up - [PROJECT_NAME] Low Voltage Discussion',
+                body: `Hi [CONTACT_NAME],
+
+I wanted to follow up on my previous message regarding [PROJECT_NAME] in [STATE].
+
+AAA Smart Security has completed similar projects with developments of [UNIT_COUNT]+ units, and we'd be happy to share references and case studies.
+
+Is there a good time to connect this week?
+
+Thanks,
+[REP_NAME]
+AAA Smart Security University`
+            },
+            proposal: {
+                subject: 'Proposal Request - [PROJECT_NAME] Low Voltage Systems',
+                body: `Dear [CONTACT_NAME],
+
+Thank you for considering AAA Smart Security for [PROJECT_NAME].
+
+Based on the scope of [UNIT_COUNT] units across [STATE], we'd like to prepare a comprehensive proposal covering:
+
+1. Fire Alarm Systems & Monitoring
+2. Access Control & Intercom
+3. Structured Cabling Infrastructure
+4. CCTV/Surveillance Systems
+
+To provide an accurate estimate, could you share:
+- Site plans or blueprints
+- Timeline expectations
+- Specific system requirements
+
+We look forward to earning your business.
+
+[REP_NAME]
+AAA Smart Security University`
+            },
+            text: {
+                subject: '',
+                body: `Hi [CONTACT_NAME], this is [REP_NAME] from AAA Smart Security. Following up on [PROJECT_NAME] - do you have a few minutes to discuss low voltage solutions for your development? Reply YES and I'll call you.`
+            }
+        };
+
+        // ==================== STATE ====================
+        let currentUser = null;
+        let activityLog = [];
+
+        // ==================== INIT ====================
+        document.addEventListener('DOMContentLoaded', function() {
+            // Check for saved session
+            const savedUser = localStorage.getItem('leadCenterUser');
+            if (savedUser) {
+                currentUser = JSON.parse(savedUser);
+                showApp();
+            }
+            updateLastSync();
+        });
+
+        // ==================== AUTH ====================
+        function handleLogin(e) {
+            e.preventDefault();
+            const email = document.getElementById('loginEmail').value;
+            const role = document.getElementById('loginRole').value;
+            
+            currentUser = {
+                email: email,
+                name: email.split('@')[0].replace('.', ' ').replace(/\b\w/g, l => l.toUpperCase()),
+                role: role,
+                loginTime: new Date().toISOString()
+            };
+            
+            localStorage.setItem('leadCenterUser', JSON.stringify(currentUser));
+            logActivity('login', 'User logged in');
+            showApp();
+        }
+
+        function showApp() {
+            document.getElementById('loginScreen').classList.add('hidden');
+            document.getElementById('appContainer').classList.add('active');
+            document.getElementById('userName').textContent = currentUser.name;
+            document.getElementById('userRole').textContent = currentUser.role.toUpperCase();
+            
+            // Load data
+            renderMLSTable();
+            renderJurisdictions();
+            startLiveUpdates();
+            showToast('Welcome back, ' + currentUser.name + '!', 'success');
+        }
+
+        function logout() {
+            logActivity('logout', 'User logged out');
+            localStorage.removeItem('leadCenterUser');
+            currentUser = null;
+            document.getElementById('loginScreen').classList.remove('hidden');
+            document.getElementById('appContainer').classList.remove('active');
+        }
+
+        // ==================== DATA RENDERING ====================
+        function renderMLSTable(filter = {}) {
+            const tbody = document.getElementById('mlsTableBody');
+            let filtered = [...mlsLeads];
+            
+            if (filter.state && filter.state !== 'ALL') {
+                filtered = filtered.filter(l => l.state === filter.state);
+            }
+            if (filter.status && filter.status !== 'ALL') {
+                filtered = filtered.filter(l => l.status === filter.status);
+            }
+            if (filter.search) {
+                const s = filter.search.toLowerCase();
+                filtered = filtered.filter(l => 
+                    l.project.toLowerCase().includes(s) || 
+                    l.developer.toLowerCase().includes(s) ||
+                    l.city.toLowerCase().includes(s)
+                );
+            }
+            
+            tbody.innerHTML = filtered.map(lead => `
+                <tr class="${lead.isNew ? 'new-row' : ''}">
+                    <td>${lead.id}</td>
+                    <td>
+                        <span class="project-name ${lead.isNew ? 'bold-new' : ''}">${lead.project}</span>
+                        <br><small style="color: var(--text-secondary)">${lead.city}</small>
+                    </td>
+                    <td>${lead.developer}</td>
+                    <td><span class="state-badge ${lead.state}">${lead.state}</span></td>
+                    <td>${lead.size}<br><small>${lead.units}</small></td>
+                    <td class="value-cell">$${(lead.value/1000000).toFixed(2)}M</td>
+                    <td><span class="status-badge ${lead.status.toLowerCase()} ${lead.isNew ? 'new' : ''}">${lead.status}</span></td>
+                    <td>
+                        ${lead.url ? `
+                            <a href="${lead.url}" class="ext-link" target="_blank" onclick="logActivity('view', 'Clicked source: ${lead.project}')">Source</a>
+                            <div class="link-options">
+                                <span class="link-opt" onclick="openInFrame('${lead.url}')" title="Open in sidebar">◫</span>
+                                <span class="link-opt" onclick="window.open('${lead.url}', '_blank')" title="Open in new tab">↗</span>
+                            </div>
+                        ` : '--'}
+                    </td>
+                    <td>
+                        <div class="action-btns">
+                            <button class="action-btn email" onclick="composeForLead('${lead.id}')" title="Send Email">✉️</button>
+                            <button class="action-btn text" onclick="composeTextForLead('${lead.id}')" title="Send Text">💬</button>
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function renderJurisdictions() {
+            const tbody = document.getElementById('jurisdictionTable');
+            tbody.innerHTML = jurisdictions.map(j => `
+                <tr>
+                    <td><span class="state-badge ${j.state}">${j.state}</span></td>
+                    <td>${j.county}</td>
+                    <td>${j.city}</td>
+                    <td><a href="${j.planning}" class="ext-link" target="_blank">Planning Dept</a></td>
+                    <td><a href="${j.rfp}" class="ext-link" target="_blank">RFP Portal</a></td>
+                </tr>
+            `).join('');
+        }
+
+        // ==================== FILTERS ====================
+        function applyFilters() {
+            const state = document.getElementById('filterState').value;
+            const status = document.getElementById('filterStatus').value;
+            renderMLSTable({ state, status });
+            logActivity('filter', `Filtered by State: ${state}, Status: ${status}`);
+        }
+
+        function filterByState(state) {
+            document.getElementById('filterState').value = state;
+            applyFilters();
+        }
+
+        function searchLeads() {
+            const search = document.getElementById('searchInput').value;
+            const state = document.getElementById('filterState').value;
+            const status = document.getElementById('filterStatus').value;
+            renderMLSTable({ state, status, search });
+        }
+
+        // ==================== SECTIONS ====================
+        function showSection(sectionId) {
+            document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            document.querySelectorAll('[id^="section-"]').forEach(s => s.style.display = 'none');
+            document.getElementById('section-' + sectionId).style.display = 'block';
+            
+            logActivity('navigate', `Viewed section: ${sectionId}`);
+        }
+
+        // ==================== PANELS ====================
+        function openSubscriptions() {
+            document.getElementById('subscriptionPanel').classList.add('active');
+            document.getElementById('overlay').classList.add('active');
+            if (currentUser) document.getElementById('subEmail').value = currentUser.email;
+        }
+
+        function openActivity() {
+            document.getElementById('activityPanel').classList.add('active');
+            document.getElementById('overlay').classList.add('active');
+        }
+
+        function openComposer() {
+            document.getElementById('composerPanel').classList.add('active');
+            document.getElementById('overlay').classList.add('active');
+        }
+
+        function openNotifications() {
+            document.getElementById('notificationPanel').classList.add('active');
+            document.getElementById('overlay').classList.add('active');
+            document.getElementById('alertBadge').textContent = '0';
+        }
+
+        function closeAllPanels() {
+            document.querySelectorAll('.sidebar-panel').forEach(p => p.classList.remove('active'));
+            document.getElementById('overlay').classList.remove('active');
+        }
+
+        // ==================== MESSAGING ====================
+        function composeForLead(leadId) {
+            const lead = mlsLeads.find(l => l.id === leadId);
+            if (!lead) return;
+            
+            openComposer();
+            document.getElementById('emailSubject').value = `AAA Smart Security - ${lead.project} Partnership`;
+            
+            let body = emailTemplates.intro.body;
+            body = body.replace(/\[PROJECT_NAME\]/g, lead.project);
+            body = body.replace(/\[UNIT_COUNT\]/g, lead.units);
+            body = body.replace(/\[STATE\]/g, lead.state);
+            body = body.replace(/\[REP_NAME\]/g, currentUser?.name || 'Your Rep');
+            document.getElementById('messageBody').value = body;
+            
+            logActivity('compose', `Started email for: ${lead.project}`);
+        }
+
+        function composeTextForLead(leadId) {
+            const lead = mlsLeads.find(l => l.id === leadId);
+            if (!lead) return;
+            
+            openComposer();
+            loadTemplate('text');
+            
+            let body = emailTemplates.text.body;
+            body = body.replace(/\[PROJECT_NAME\]/g, lead.project);
+            body = body.replace(/\[REP_NAME\]/g, currentUser?.name || 'Your Rep');
+            document.getElementById('messageBody').value = body;
+        }
+
+        function loadTemplate(type) {
+            document.querySelectorAll('.template-tab').forEach(t => t.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            const template = emailTemplates[type];
+            document.getElementById('emailSubject').value = template.subject;
+            document.getElementById('messageBody').value = template.body;
+        }
+
+        function insertVariable(variable) {
+            const textarea = document.getElementById('messageBody');
+            const start = textarea.selectionStart;
+            const end = textarea.selectionEnd;
+            const text = textarea.value;
+            textarea.value = text.substring(0, start) + variable + text.substring(end);
+            textarea.focus();
+            textarea.selectionStart = textarea.selectionEnd = start + variable.length;
+        }
+
+        function sendEmail() {
+            const recipient = document.getElementById('recipientEmail').value;
+            const subject = document.getElementById('emailSubject').value;
+            const body = document.getElementById('messageBody').value;
+            
+            // Create mailto link
+            const mailtoLink = `mailto:${recipient}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+            window.open(mailtoLink);
+            
+            logActivity('contact', `Sent email to: ${recipient}`);
+            showToast('Opening email client...', 'success');
+        }
+
+        function sendText() {
+            const body = document.getElementById('messageBody').value;
+            // SMS link (works on mobile)
+            const smsLink = `sms:?body=${encodeURIComponent(body)}`;
+            window.open(smsLink);
+            
+            logActivity('contact', 'Opened SMS composer');
+            showToast('Opening SMS...', 'success');
+        }
+
+        function copyMessage() {
+            const body = document.getElementById('messageBody').value;
+            navigator.clipboard.writeText(body);
+            showToast('Message copied to clipboard!', 'success');
+        }
+
+        // ==================== SUBSCRIPTIONS ====================
+        function saveSubscriptions() {
+            const settings = {
+                email: document.getElementById('subEmail').value,
+                newLeads: document.getElementById('subNewLeads').checked,
+                statusChange: document.getElementById('subStatusChange').checked,
+                rfpDeadlines: document.getElementById('subRFPDeadlines').checked,
+                dailySummary: document.getElementById('subDailySummary').checked,
+                weeklyReport: document.getElementById('subWeeklyReport').checked
+            };
+            
+            localStorage.setItem('leadCenterSubs', JSON.stringify(settings));
+            logActivity('settings', 'Updated subscription settings');
+            showToast('Subscription settings saved!', 'success');
+            closeAllPanels();
+        }
+
+        // ==================== EXPORT ====================
+        function exportToExcel() {
+            // Generate CSV
+            let csv = 'MLS ID,Project,Developer,State,City,Size,Units,Est Value,Status,Source URL\n';
+            mlsLeads.forEach(l => {
+                csv += `"${l.id}","${l.project}","${l.developer}","${l.state}","${l.city}","${l.size}","${l.units}","$${l.value}","${l.status}","${l.url}"\n`;
+            });
+            
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `AAASSU_Lead_Export_${new Date().toISOString().split('T')[0]}.csv`;
+            a.click();
+            
+            logActivity('export', `Exported ${mlsLeads.length} leads to CSV`);
+            showToast('Export complete!', 'success');
+        }
+
+        function exportActivityLog() {
+            let csv = 'Timestamp,User,Action,Details\n';
+            activityLog.forEach(a => {
+                csv += `"${a.time}","${a.user}","${a.type}","${a.details}"\n`;
+            });
+            
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `Activity_Log_${new Date().toISOString().split('T')[0]}.csv`;
+            a.click();
+            
+            showToast('Activity log exported!', 'success');
+        }
+
+        // ==================== ACTIVITY LOGGING ====================
+        function logActivity(type, details) {
+            const entry = {
+                time: new Date().toISOString(),
+                user: currentUser?.name || 'System',
+                type: type,
+                details: details
+            };
+            activityLog.unshift(entry);
+            
+            // Keep last 100 entries
+            if (activityLog.length > 100) activityLog.pop();
+            
+            // Save to localStorage
+            localStorage.setItem('leadCenterActivity', JSON.stringify(activityLog));
+        }
+
+        // ==================== LIVE UPDATES ====================
+        function startLiveUpdates() {
+            // Simulate live data refresh
+            setInterval(() => {
+                updateLastSync();
+            }, 60000);
+            
+            // Simulate new lead notification (demo)
+            setTimeout(() => {
+                simulateNewLead();
+            }, 30000);
+        }
+
+        function updateLastSync() {
+            const now = new Date();
+            document.getElementById('lastSync').textContent = now.toLocaleTimeString();
+        }
+
+        function refreshData() {
+            showToast('Refreshing data...', 'info');
+            renderMLSTable();
+            updateLastSync();
+            logActivity('refresh', 'Manual data refresh');
+        }
+
+        function simulateNewLead() {
+            // This would be replaced with actual websocket/polling in production
+            const randomLead = mlsLeads[Math.floor(Math.random() * 3)];
+            if (randomLead) {
+                showToast(`📊 Update: ${randomLead.project}`, 'info');
+            }
+        }
+
+        // ==================== TOAST NOTIFICATIONS ====================
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.innerHTML = `
+                <span class="icon">${type === 'success' ? '✓' : type === 'error' ? '✕' : 'ℹ'}</span>
+                <span class="message">${message}</span>
+            `;
+            container.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                setTimeout(() => toast.remove(), 300);
+            }, 4000);
+        }
+
+        // ==================== UTILITY ====================
+        function openInFrame(url) {
+            // For iframe preview - simplified version
+            window.open(url, 'preview', 'width=800,height=600');
+            logActivity('view', `Opened preview: ${url}`);
+        }
+    </script>
+</body>
+</html>
